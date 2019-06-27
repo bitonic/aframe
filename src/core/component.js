@@ -272,6 +272,7 @@ Component.prototype = {
    * @param {string} attrValue - HTML attribute value.
    *        If undefined, use the cached attribute value and continue updating properties.
    * @param {boolean} clobber - The previous component data is overwritten by the atrrValue
+   * @return {boolean} Wether the component has been updated
    */
   updateProperties: function (attrValue, clobber) {
     var el = this.el;
@@ -280,7 +281,7 @@ Component.prototype = {
     // Components are not initialized until the entity has loaded
     if (!el.hasLoaded) {
       this.updateCachedAttrValue(attrValue);
-      return;
+      return false;
     }
 
     // Parse the attribute value.
@@ -295,9 +296,10 @@ Component.prototype = {
 
     if (this.initialized) {
       this.updateComponent(attrValue, clobber);
-      this.callUpdateHandler();
+      return this.callUpdateHandler();
     } else {
       this.initComponent();
+      return true;
     }
   },
 
@@ -406,7 +408,7 @@ Component.prototype = {
 
     // Don't update if properties haven't changed.
     // Always update rotation, position, scale.
-    if (!this.isPositionRotationScale && !hasComponentChanged) { return; }
+    if (!this.isPositionRotationScale && !hasComponentChanged) { return false; }
 
     // Store current data as previous data for future updates.
     // Reuse `this.oldData` object to try not to allocate another one.
@@ -417,6 +419,7 @@ Component.prototype = {
     this.update(this.previousOldData);
 
     this.throttledEmitComponentChanged();
+    return true;
   },
 
   handleMixinUpdate: function () {

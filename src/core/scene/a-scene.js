@@ -38,6 +38,7 @@ module.exports.AScene = registerElement('a-scene', {
   prototype: Object.create(AEntity.prototype, {
     createdCallback: {
       value: function () {
+        this.dirtyFrame = true;
         this.clock = new THREE.Clock();
         this.isIOS = isIOS;
         this.isMobile = isMobile;
@@ -546,6 +547,8 @@ module.exports.AScene = registerElement('a-scene', {
         // Notify renderer of size change.
         this.renderer.setSize(size.width, size.height, false);
         this.emit('rendererresize', null, false);
+        // set the frame as dirty
+        this.setDirtyFrame();
       },
       writable: true
     },
@@ -730,10 +733,21 @@ module.exports.AScene = registerElement('a-scene', {
         this.time = this.clock.elapsedTime * 1000;
 
         if (this.isPlaying) { this.tick(this.time, this.delta); }
-
-        renderer.render(this.object3D, this.camera);
+        // the injector doesn't use setAttribute, so we always rerender
+        // while paused, which is a hacky way of checking when the
+        // inspector is open.
+        if (this.dirtyFrame || !this.isPlaying) {
+          renderer.render(this.object3D, this.camera);
+          this.dirtyFrame = false;
+        }
       },
       writable: true
+    },
+
+    setDirtyFrame: {
+      value: function () {
+        this.dirtyFrame = true;
+      }
     }
   })
 });

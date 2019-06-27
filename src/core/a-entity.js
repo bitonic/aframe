@@ -404,6 +404,7 @@ var proto = Object.create(ANode.prototype, {
         delete this.components[name];
       }
 
+      this.sceneEl.setDirtyFrame();
       this.emit('componentremoved', component.evtDetail, false);
     },
     writable: window.debug
@@ -487,7 +488,10 @@ var proto = Object.create(ANode.prototype, {
           return;
         }
         // Component already initialized. Update component.
-        component.updateProperties(attrValue, clobber);
+        var updated = component.updateProperties(attrValue, clobber);
+        if (updated) {
+          this.sceneEl.setDirtyFrame();
+        }
         return;
       }
 
